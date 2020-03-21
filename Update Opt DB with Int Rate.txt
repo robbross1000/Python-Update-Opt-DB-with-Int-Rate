@@ -1,0 +1,74 @@
+from datetime import date
+from datetime import datetime, timedelta
+import datetime
+import calendar
+import pyodbc
+
+conn = pyodbc.connect(r'Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=C:\Users\rross\Dropbox\OptionHistory.accdb;')
+cursor = conn.cursor()
+
+date_str = '10-11-2010'
+date_object = datetime.datetime.strptime(date_str, '%m-%d-%Y')
+print(type(date_object))
+print(date_object)
+
+#Startdatetime_object = datetime.datetime.strptime('01/01/2009', '%m/%d/%y %H:%M:%S')
+
+f = open("C:\Data\Risk Free Rate History 20200221.csv", "r")
+f1 = f.readlines()
+i = 0
+j = 0
+symbol = ""
+for x in f1:
+    j += 1
+    
+    if (j>1):
+        data_info = x.split(',')
+        dtDate = data_info[0]
+        #print(str(j) + "   " + dtDate)
+        dtCurrentDate = datetime.datetime.strptime(dtDate, '%m/%d/%Y')
+        IntRate3Month = data_info[3]
+
+        if (dtCurrentDate > date_object):
+            print(data_info)
+            print(data_info[0] + ' ' + data_info[3])
+            for n in range(12):
+                if (data_info[n] == 'N/A'):
+                    data_info[n] = '0'
+                data_info[n].replace('\n','')  
+                    
+            sSQLIntRateInsert = "Insert into RiskFreeRate (DataDate, TBill90Day, TBill1Yr, TNote2Yr, TNote5Yr, TNote10Yr, TNote20Yr, TBond30Yr) values ("
+            sSQLIntRateInsert += "#" + data_info[0] + '#, '
+            sSQLIntRateInsert += data_info[3] + ', '            
+            sSQLIntRateInsert += data_info[5] + ', '             
+            sSQLIntRateInsert += data_info[6] + ', ' 
+            sSQLIntRateInsert += data_info[8] + ', ' 
+            sSQLIntRateInsert += data_info[10] + ', ' 
+            sSQLIntRateInsert += data_info[11] + ', '             
+            sSQLIntRateInsert += data_info[12] + ') '             
+            
+            #print(sSQLIntRateInsert)
+            
+            i = i + 1
+            if (i % 100 == 0):
+                print(str(i))
+                print(sSQLIntRateInsert)
+    
+            conn.execute(sSQLIntRateInsert)
+            conn.commit()
+    
+    #dtPrevExpiry = x[2] + timedelta(days=1)
+    #strPrevExpiry = '{:%m/%d/%Y}'.format(dtExpiry)
+    #if (i>25):
+        #break;
+        
+conn.close()   
+
+            
+print('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<')
+print(' ')
+print(' PROCESS FINISHED ')
+print(' ')
+print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')    
+    
+    
